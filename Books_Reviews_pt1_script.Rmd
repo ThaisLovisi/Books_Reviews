@@ -1,0 +1,167 @@
+---
+title: 'Guided Project: Creating An Efficient Data Analysis Workflow'
+author: "Thais Lovisi"
+date:   "2022-12-19"
+output: html_document
+---
+
+## Introduction
+
+  In this guided project, we will be acting as a data analyst for a company that sells books for learning programming. This company has produced multiple books, and each has received many reviews. The company wants us to check out the sales data and see if we can extract any useful information from it. 
+    
+  Additional info:
+	•   For this R guided projects, we will be working with an RMarkdown file in our own Rstudio, wich will display the output in HTML format. 
+	•   The data is at the book_reviews.csv file.
+	
+Questions to be answered on this project:
+  Which book is the most profitable?
+
+## Step 1 - Initial settup
+
+  Note that in this case the dplyr was not being pulled with tidyverse, so a manual install was required
+```{r echo=TRUE, message=TRUE, warning=FALSE}
+library("tidyverse")
+install.packages("dplyr")
+```
+
+library("dplyr")
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+raw_dataset <- read.csv("C:/Users/lovis/OneDrive/Documents/MBA/New folder/Books_Reviews/book_reviews.csv")# while copying path remember to invert the \
+```
+
+## Step 2 - Getting Familiar With The Data
+
+```{r paged.print=TRUE}
+dim(raw_dataset)#How big is the dataset? 
+colnames(raw_dataset)#What are the column names? 
+
+for (c in colnames(raw_dataset)) {
+  print(typeof(raw_dataset[[c]]))#access a column in a tibble with double bracket syntax tibble_data[["column_name"]]
+}
+```
+At the code lines above:
+  typeof() = returns what are the types of each of the columns?
+  Sometimes you may find that data will look one way, but is actually disguised as another. 
+  a common example of this are numbers that are actually on string format!
+
+What are the unique values in each column?
+```{r paged.print=TRUE}
+
+for (c in colnames(raw_dataset)) {
+  print("Unique values in the column:")
+  print(c)
+  print(unique(raw_dataset[[c]]))
+  print("")
+}
+```
+General information
+
+```{r paged.print=TRUE}
+min(raw_dataset[[4]])
+max(raw_dataset[[4]])
+summary(raw_dataset)
+```
+
+## Step 3 - Handling Missing Data
+
+There are two ways that we can deal with missing data: 
+  1) remove any rows or columns that have missing data (typically, rows) 
+  2) fill in the missing data in an informed, discipline way.This second way is known as imputation.
+  
+Does the colunm c has missing data on it?
+
+```{r paged.print=TRUE}
+matrix_NA <- for (c in colnames(raw_dataset)){ #for each col c on the range
+                for (i in 1:nrow(raw_dataset)){ #for each row i on the range
+                    if (is.na(raw_dataset[i,c])) {
+                      print (c(c,"NA FOUND"))
+                      break #if doesnt work with other coders go change break by next
+                    }else{
+                      next
+                    }
+                }       
+              }
+```
+Creating a file copy without NA rows. Please make sure that one original version of the file is always kept.
+
+```{r paged.print=TRUE} 
+complete_reviews = raw_dataset%>%
+  filter(!is.na(review)) # dplyr is having conflict with function filter, to solve it is necessary load it 2x
+dim(complete_reviews)
+
+```
+#### Report insertion
+There were about 200 reviews that were removed from the dataset. This is about 10% of the original dataset. This isn't too big of an amount, so we would feel comfortable continuing with our analysis.
+
+## Step 4 - Making labels more consistent
+```{r paged.print=TRUE}
+print(unique(complete_reviews[[3]])) #unique values for column 3, lists the states name and help us identify inconsistencies
+
+complete_review <- complete_reviews %>% # mutate for full name of state those ones with shortening registered
+  mutate(
+    state = case_when(    state == "NY" ~ "New York",
+                          state == "FL" ~ "Florida",
+                          state == "TX" ~ "Texas",
+                          state == "CA" ~ "California",
+                          TRUE ~ state # ignore cases where it's already postal code
+    )
+  )
+
+```
+## Step 5 - Transforming The Review Data (converting to numerical)
+
+Indentifying the values
+
+```{r paged.print=TRUE}
+print(unique(complete_review[[2]])) #unique values for column 3  
+```
+
+Additional info:
+
+  "Poor" should receive a numerical score of 1
+  "Fair" should receive a numerical score of 2
+  "Good" should receive a numerical score of 3
+  "Great" should receive a numerical score of 4
+  "Excellent" should receive a numerical score of 5
+
+```{r paged.print=TRUE}
+print(unique(complete_review[[2]])) #unique values for column 3    
+complete_review_DT <- complete_reviews %>%
+                        mutate(
+                          review = case_when (
+                            review == "Excellent" ~ 5,
+                            review == "Great" ~ 4,
+                            review == "Good" ~ 3,
+                            review == "Fair" ~ 2,
+                            review == "Poor" ~ 1),
+                          is_high_review = if_else(review >= 4, TRUE, FALSE)
+                        )
+```
+## Step 7 - Analyzing The Data
+  With all of our data cleaning, now we're ready to do the data analysis. If our main goal is to figure out what book is the most profitable, we can do it in one of the following ways :
+    Choosing the book that's purchased the most.It will be possible because our dataset contains the information regarding customer purchases. 
+    Define "most profitable" might be to just choose the book that's purchased the most.
+    Verifying how much money each book generates overall.
+    
+### How many books there was sold and the total price?
+
+```{r echo=TRUE, paged.print=TRUE}
+matrix_A <- as.data.frame(complete_review_DT %>% 
+  group_by(book,price) %>%  # the item wasnt grouped by price just by book
+  summarize(
+    purchased = n()
+  ) %>% 
+  arrange(-purchased))
+
+matrix_A$Total_Sales <- matrix_A[,2]*matrix_A[,3]
+matrix_A
+
+```
+
+# Report basic Instructions
+
+A good, common way to structure a report is into three parts: Introduction, Findings, Conclusion
+Summarize the notes we've made into polished paragraphs for each section. As a guideline, we can try to answer each of the questions below for each section:
+  Introduction: What motivated our analysis? What kind of data do we have? What is the main question we're trying to answer?
+  Findings: What did we need to do to the data to do our analysis? What things are we calculating to answer our main question?
+  Conclusion: What is the answer to our main question? Was there anything that we feel limits our analysis? What should the reader do with our findings?

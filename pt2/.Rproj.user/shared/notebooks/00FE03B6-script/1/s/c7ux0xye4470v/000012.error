@@ -1,0 +1,1 @@
+{"frames":[{"func":"if_else(is.na(total_purchased), purchase_mean, total_purchased)","file":"","line_number":0,"end_line_number":0,"character_number":0,"end_character_number":0}],"message":"Error in if_else(is.na(total_purchased), purchase_mean, total_purchased) : \n  object 'total_purchased' not found\n"}

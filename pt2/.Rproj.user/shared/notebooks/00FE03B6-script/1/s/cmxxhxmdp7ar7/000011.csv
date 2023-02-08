@@ -1,0 +1,7 @@
+"0","clean_sales_data %>% 
+  group_by(date_status, positive_Review) %>%
+  summarise(
+    books_purchased = sum(imputed_purchase)
+  )
+"
+"2","`summarise()` has grouped output by 'date_status'. You can override using the `.groups` argument."

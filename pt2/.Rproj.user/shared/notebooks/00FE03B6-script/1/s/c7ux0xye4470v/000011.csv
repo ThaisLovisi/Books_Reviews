@@ -1,0 +1,5 @@
+"0","    imputed_purchase = if_else(is.na(total_purchased),purchase_mean,total_purchased)
+"
+"2","Error in if_else(is.na(total_purchased), purchase_mean, total_purchased) : 
+  object 'total_purchased' not found
+"
